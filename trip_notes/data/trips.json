@@ -1,0 +1,29 @@
+[
+  {
+    "name": "1",
+    "country": "Japan",
+    "budget": 2000.0,
+    "notes": [
+      "Cheap plane ticket"
+    ],
+    "date_added": "2026-04-06"
+  },
+  {
+    "name": "2",
+    "country": "UK",
+    "budget": 4500.0,
+    "notes": [
+      "Very expensive"
+    ],
+    "date_added": "2026-04-06"
+  },
+  {
+    "name": "3",
+    "country": "Korea",
+    "budget": 2100.0,
+    "notes": [
+      "Language is harder to understand"
+    ],
+    "date_added": "2026-04-06"
+  }
+]
