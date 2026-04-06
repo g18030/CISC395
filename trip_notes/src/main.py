@@ -13,13 +13,17 @@ def main():
 
     while True:
         print("\n=== Trip Notes ===")
+        print()
+        print("-- Data --")
         print("[1] Add destination")
-        print("[2] View all destinations")
-        print("[3] Search by country")
-        print("[4] Add note to a destination")
-        print("[5] Quit")
-        print("[6] Mark as Visited")
-        print("[7] Wishlist / Visited")
+        print("[2] List all destinations")
+        print("[3] Mark as visited")
+        print("[4] Show statistics")
+        print()
+        print("-- AI --")
+        print("(coming soon)")
+        print()
+        print("[Q] Quit")
 
         choice = input("Select an option: ").strip()
 
@@ -81,8 +85,7 @@ def main():
             except ValueError:
                 print("Please enter a valid number.")
 
-        elif choice == '5':
-            print("Goodbye!")
+        elif choice.lower() == 'q':
             break
 
         elif choice == '6':
