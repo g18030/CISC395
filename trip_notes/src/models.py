@@ -10,6 +10,7 @@ class Destination:
     date_added: str = field(default_factory=lambda: date.today().isoformat())
 
     def add_note(self, note: str) -> None:
+        """Appends a note to the destination's notes list."""
         self.notes.append(note)
 
 class TripCollection:
@@ -17,18 +18,21 @@ class TripCollection:
         self._trips: list[Destination] = []
 
     def add(self, destination: Destination) -> None:
+        """Adds a Destination object to the collection."""
         self._trips.append(destination)
 
     def get_all(self) -> list[Destination]:
+        """Returns all destinations in the collection."""
         return self._trips
 
     def search_by_country(self, country: str) -> list[Destination]:
+        """Returns destinations matching the country name (case-insensitive)."""
         return [t for t in self._trips if t.country.lower() == country.lower()]
 
     def get_by_index(self, index: int) -> Destination:
-        if 0 <= index < len(self._trips):
-            return self._trips[index]
-        raise IndexError("Index out of range")
+        """Returns the destination at the given index."""
+        return self._trips[index]
 
     def __len__(self) -> int:
+        """Returns the number of destinations in the collection."""
         return len(self._trips)
