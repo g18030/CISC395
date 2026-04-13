@@ -6,7 +6,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.models import Destination, TripCollection
 from src.storage import load_trips, save_trips
-from src.ai_assistant import ask, TRAVEL_SYSTEM_PROMPT
+from src.ai_assistant import ask, TRAVEL_SYSTEM_PROMPT, generate_trip_briefing
 
 def main():
     # On startup: load existing trips
@@ -23,6 +23,7 @@ def main():
         print()
         print("-- AI --")
         print("[6] Ask AI a travel question")
+        print("[7] Trip Briefing")
         print()
         print("[Q] Quit")
 
@@ -119,16 +120,34 @@ def main():
                     print("Invalid trip number.")
 
         elif choice == '7':
-            wishlist = collection.get_wishlist()
-            visited = collection.get_visited()
+            destinations = collection.get_all()
+            if not destinations:
+                print("No trips saved yet.")
+                continue
 
-            print(f"\n--- Wishlist ({len(wishlist)}) ---")
-            for trip in wishlist:
-                print(f"- {trip.name} ({trip.country})")
-            
-            print(f"\n--- Visited ({len(visited)}) ---")
-            for trip in visited:
-                print(f"- {trip.name} ({trip.country})")
+            for i, dest in enumerate(destinations, 1):
+                print(f"  [{i}] {dest.name}, {dest.country}")
+
+            try:
+                index_choice = int(input("Select trip number: "))
+                index = index_choice - 1
+                if index < 0 or index >= len(destinations):
+                    print("Invalid selection.")
+                    continue
+
+                dest = destinations[index]
+                print(f"Generating briefing for {dest.name}...")
+                result = generate_trip_briefing(dest.name, dest.country, dest.notes)
+
+                if result is None:
+                    print("Briefing failed. Check your API connection.")
+                    continue
+
+                print(f"\n--- {dest.name} Briefing ---")
+                print(f"Overview:\n{result['overview']}")
+                print(f"\nPacking List:\n{result['packing_list']}")
+            except ValueError:
+                print("Invalid selection.")
         
         else:
             print("Invalid option, try again.")
