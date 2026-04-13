@@ -6,6 +6,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.models import Destination, TripCollection
 from src.storage import load_trips, save_trips
+from src.ai_assistant import ask, TRAVEL_SYSTEM_PROMPT
 
 def main():
     # On startup: load existing trips
@@ -21,7 +22,7 @@ def main():
         print("[4] Show statistics")
         print()
         print("-- AI --")
-        print("(coming soon)")
+        print("[6] Ask AI a travel question")
         print()
         print("[Q] Quit")
 
@@ -89,26 +90,33 @@ def main():
             break
 
         elif choice == '6':
-            if len(collection) == 0:
-                print("No trips to mark as visited.")
+            question = input("Your question: ")
+            response = ask(question, system_prompt=TRAVEL_SYSTEM_PROMPT)
+
+            if response is None:
+                print("Could not get a response from the AI right now.")
                 continue
-            
-            # Print numbered list first
-            for i, trip in enumerate(collection.get_all(), 1):
-                status = " [Visited]" if trip.visited else ""
-                print(f"{i}. {trip.name}{status}")
-            
-            try:
-                index_choice = int(input("Enter number to select: "))
-                if 1 <= index_choice <= len(collection):
-                    trip = collection.get_by_index(index_choice - 1)
-                    collection.mark_visited(index_choice - 1)
+
+            print(response)
+
+            save_answer = input("Save this as a note on a trip? (y/n): ").strip().lower()
+            if save_answer == "y":
+                trips = collection.get_all()
+                if not trips:
+                    print("No trips saved yet.")
+                    continue
+
+                for i, trip in enumerate(trips, 1):
+                    print(f"{i}. {trip.name}")
+
+                try:
+                    trip_number = int(input("Trip number: "))
+                    trip = collection.get_by_index(trip_number - 1)
+                    trip.add_note(response)
                     save_trips(collection)
-                    print(f"Marked {trip.name} as visited!")
-                else:
-                    print("Invalid number.")
-            except ValueError:
-                print("Please enter a valid number.")
+                    print(f"Saved as a note on {trip.name}.")
+                except (ValueError, IndexError):
+                    print("Invalid trip number.")
 
         elif choice == '7':
             wishlist = collection.get_wishlist()
