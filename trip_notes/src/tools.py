@@ -2,6 +2,7 @@ import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import json
 import urllib.request
+from src.ai_assistant import client, MODEL
 from src.rag import search_guides, ensure_index
 
 
@@ -47,6 +48,54 @@ def search_guides_tool(query: str) -> str:
         return "No relevant information found in guides."
 
     return "\n\n---\n\n".join(chunks)
+
+
+def run_agent(user_question: str) -> str:
+    messages = [
+        {
+            "role": "system",
+            "content": (
+                "You are a travel planning agent. Use the available tools to help "
+                "users plan trips. Always use a tool if it can answer the question "
+                "more accurately — especially for real-time data or guide content."
+            ),
+        },
+        {"role": "user", "content": user_question},
+    ]
+
+    for _ in range(5):
+        response = client.chat.completions.create(
+            model=MODEL,
+            messages=messages,
+            tools=TOOL_DEFINITIONS,
+            tool_choice="auto",
+            max_tokens=1024,
+            timeout=30,
+        )
+        msg = response.choices[0].message
+
+        if not msg.tool_calls:
+            return msg.content
+
+        for tc in msg.tool_calls:
+            name = tc.function.name
+            args = json.loads(tc.function.arguments)
+            print(f"[Tool call] {name}({args})")
+
+            if name == "budget_breakdown":
+                result = budget_breakdown(**args)
+            elif name == "get_weather":
+                result = get_weather(**args)
+            elif name == "search_guides_tool":
+                result = search_guides_tool(**args)
+            else:
+                result = f"Unknown tool: {name}"
+
+            print(f"[Tool result] {result[:120]}...")
+            messages.append({"role": "assistant", "content": None, "tool_calls": [tc]})
+            messages.append({"role": "tool", "tool_call_id": tc.id, "content": result})
+
+    return "Agent reached maximum iterations."
 
 
 TOOL_DEFINITIONS = [
