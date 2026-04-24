@@ -8,6 +8,7 @@ from src.models import Destination, TripCollection
 from src.storage import load_trips, save_trips
 from src.ai_assistant import ask, TRAVEL_SYSTEM_PROMPT, generate_trip_briefing, rag_ask
 from src.rag import build_index
+from src.tools import run_agent
 
 def main():
     # On startup: load existing trips
@@ -22,7 +23,7 @@ def main():
         print()
         print("-- AI --")
         print("[6] Ask AI                [7] Trip Briefing")
-        print("[8] Search my guides")
+        print("[8] Search my guides      [10] AI Travel Agent")
         print()
         print("[R] Rebuild search index")
         print("[Q] Quit")
@@ -158,6 +159,37 @@ def main():
             question = input("Your question: ")
             answer = rag_ask(question)
             print(answer)
+
+        elif choice == '10':
+            print("The agent can calculate budgets, check real-time weather, and search your travel guides.")
+            question = input("Your question: ")
+            print("\nThinking...\n")
+
+            result = run_agent(question)
+            if result is None:
+                print("Could not get a response from the agent right now.")
+                continue
+
+            print("\nAgent answer:\n" + result)
+
+            save_answer = input("Save this as a note on a trip? (y/n): ").strip().lower()
+            if save_answer == "y":
+                trips = collection.get_all()
+                if not trips:
+                    print("No trips saved yet.")
+                    continue
+
+                for i, trip in enumerate(trips, 1):
+                    print(f"{i}. {trip.name}")
+
+                try:
+                    trip_number = int(input("Trip number: "))
+                    trip = collection.get_by_index(trip_number - 1)
+                    trip.add_note(result)
+                    save_trips(collection)
+                    print(f"Saved as a note on {trip.name}.")
+                except (ValueError, IndexError):
+                    print("Invalid trip number.")
         
         else:
             print("Invalid option, try again.")
