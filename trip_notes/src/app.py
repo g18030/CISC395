@@ -7,6 +7,7 @@ from src.ai_assistant import ask, TRAVEL_SYSTEM_PROMPT, MODEL, client
 from src.storage import load_trips
 from src.ai_assistant import rag_ask
 from src.rag import ensure_index
+from src.tools import run_agent, TOOL_DEFINITIONS
 
 
 st.set_page_config(page_title="Trip Notes AI", page_icon="✈️", layout="wide")
@@ -113,4 +114,33 @@ with search_tab:
         st.rerun()
 
 with agent_tab:
-    st.info("Coming soon — Exercise 4")
+    st.subheader("AI Travel Agent")
+    st.caption("The agent uses tools: budget calculation, live weather, and guide search.")
+
+    question = st.text_area(
+        "Your question:",
+        placeholder="e.g. I have $1200 for 8 days in Tokyo. Check the weather and break down my budget.",
+        height=100
+    )
+
+    if st.button("Ask the Agent"):
+        if question:
+            with st.spinner("Agent is working..."):
+                answer = run_agent(question)
+
+            st.markdown(answer)
+
+            with st.expander("Tools available to this agent"):
+                for tool in TOOL_DEFINITIONS:
+                    tool_name = tool["function"]["name"]
+                    st.markdown(f"• {tool_name}")
+
+            st.session_state["agent_history"].append({"question": question, "answer": answer})
+
+    st.divider()
+    st.write("**Previous queries this session:**")
+
+    for item in reversed(st.session_state["agent_history"]):
+        truncated_q = item["question"][:60] + ("..." if len(item["question"]) > 60 else "")
+        with st.expander(f"Q: {truncated_q}"):
+            st.markdown(item["answer"])
