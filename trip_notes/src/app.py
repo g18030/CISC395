@@ -5,6 +5,8 @@ import streamlit as st
 
 from src.ai_assistant import ask, TRAVEL_SYSTEM_PROMPT, MODEL, client
 from src.storage import load_trips
+from src.ai_assistant import rag_ask
+from src.rag import ensure_index
 
 
 st.set_page_config(page_title="Trip Notes AI", page_icon="✈️", layout="wide")
@@ -18,6 +20,9 @@ if "search_history" not in st.session_state:
     st.session_state.search_history = []
 if "agent_history" not in st.session_state:
     st.session_state.agent_history = []
+
+
+ensure_index()
 
 
 trips = st.session_state.trips.get_all()
@@ -84,7 +89,28 @@ with chat_tab:
         st.rerun()
 
 with search_tab:
-    st.info("Coming soon — Exercise 3")
+    st.subheader("Search My Guides")
+    st.caption("Answers grounded in your guides/ documents.")
+
+    for message in st.session_state["search_history"]:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+
+    user_input = st.chat_input("Search your guides...", key="search_input")
+    if user_input:
+        st.session_state["search_history"].append({"role": "user", "content": user_input})
+
+        with st.spinner("Searching guides..."):
+            response = rag_ask(user_input)
+
+        with st.chat_message("assistant"):
+            st.markdown(response)
+
+        st.session_state["search_history"].append({"role": "assistant", "content": response})
+
+    if st.button("Clear search", key="clear_search"):
+        st.session_state["search_history"].clear()
+        st.rerun()
 
 with agent_tab:
     st.info("Coming soon — Exercise 4")
